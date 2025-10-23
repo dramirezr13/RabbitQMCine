@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Reservas - Cine Kafka</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .mensaje { background: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎬 Cine Kafka - Sistema de Reservas</h1>
+
+    <div th:if="${mensaje}" class="mensaje" th:text="${mensaje}"></div>
+
+    <form th:action="@{/reservar}" method="post">
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+
+        <div class="form-group">
+            <label for="pelicula">Película:</label>
+            <select id="pelicula" name="pelicula" required>
+                <option value="">Seleccione una película</option>
+                <option th:each="pelicula : ${peliculas}" th:value="${pelicula}" th:text="${pelicula}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="horario">Horario:</label>
+            <select id="horario" name="horario" required>
+                <option value="">Seleccione un horario</option>
+                <option th:each="horario : ${horarios}" th:value="${horario}" th:text="${horario}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="asientos">Asientos (ej: A1,A2,B5):</label>
+            <input type="text" id="asientos" name="asientos" placeholder="A1,A2,B3" required>
+        </div>
+
+        <button type="submit">🎫 Reservar Asientos</button>
+    </form>
+
+    <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+        <h3>📋 Instrucciones:</h3>
+        <p>1. Llena el formulario y haz clic en "Reservar"</p>
+        <p>2. Mira la consola del PROVEEDOR (verás el mensaje enviado)</p>
+        <p>3. Mira la consola del CONSUMIDOR (verás el mensaje recibido)</p>
+    </div>
+</div>
+</body>
+</html>
