@@ -2,59 +2,407 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Reservas - Cine Kafka</title>
+    <title>Sistema de Reservas - Cine RabbitMQ</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-        .mensaje { background: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .dashboard {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .form-section, .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .mensaje {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .consulta-asientos {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .consulta-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .asientos-resultado {
+            margin-top: 10px;
+        }
+
+        .asientos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .asiento-disponible {
+            background: #28a745;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .reservas-recientes {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .reserva-item {
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .instructions {
+            background: #d1ecf1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .estado-asientos {
+            background: #e2e3e5;
+            padding: 8px;
+            border-radius: 3px;
+            margin: 8px 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>🎬 Cine Kafka - Sistema de Reservas</h1>
+    <h1>🎬 Cine RabbitMQ - Sistema de Reservas</h1>
 
-    <div th:if="${mensaje}" class="mensaje" th:text="${mensaje}"></div>
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+        <h2>Estado del Sistema</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Reservas Hoy</h3>
+                <span th:text="${reservasHoy}">0</span>
+            </div>
+            <div class="stat-card">
+                <h3>Película Popular</h3>
+                <span th:text="${peliculaPopular}">-</span>
+            </div>
+            <div class="stat-card">
+                <h3>Próxima Función</h3>
+                <span th:text="${proximaFuncion}">-</span>
+            </div>
+        </div>
+    </div>
 
-    <form th:action="@{/reservar}" method="post">
-        <div class="form-group">
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" required>
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="content-grid">
+        <!-- FORMULARIO -->
+        <div class="form-section">
+            <h2>Hacer Reserva</h2>
+
+            <div th:if="${mensaje}" class="mensaje" th:text="${mensaje}"></div>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+
+            <form th:action="@{/reservar}" method="post">
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="pelicula">Película:</label>
+                    <select id="pelicula" name="pelicula" required>
+                        <option value="">Seleccione película</option>
+                        <option th:each="pelicula : ${peliculas}"
+                                th:value="${pelicula}"
+                                th:text="${pelicula}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="horario">Horario:</label>
+                    <select id="horario" name="horario" required>
+                        <option value="">Seleccione horario</option>
+                        <option th:each="horario : ${horarios}"
+                                th:value="${horario}"
+                                th:text="${horario}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="asientos">Asientos (ej: A1,A2):</label>
+                    <input type="text" id="asientos" name="asientos" required>
+                </div>
+
+                <div id="estado-asientos" class="estado-asientos">
+                    Selecciona película y horario
+                </div>
+
+                <button type="submit">Reservar</button>
+            </form>
         </div>
 
-        <div class="form-group">
-            <label for="pelicula">Película:</label>
-            <select id="pelicula" name="pelicula" required>
-                <option value="">Seleccione una película</option>
-                <option th:each="pelicula : ${peliculas}" th:value="${pelicula}" th:text="${pelicula}"></option>
-            </select>
+        <!-- CONSULTAS -->
+        <div class="info-section">
+            <h2>Consultas</h2>
+
+            <!-- CONSULTA ASIENTOS -->
+            <div class="consulta-asientos">
+                <h3>Consultar Asientos Disponibles</h3>
+
+                <div class="consulta-controls">
+                    <select id="consulta-pelicula" onchange="consultarAsientos()">
+                        <option value="">Película</option>
+                        <option th:each="pelicula : ${peliculas}"
+                                th:value="${pelicula}"
+                                th:text="${pelicula}"></option>
+                    </select>
+
+                    <select id="consulta-horario" onchange="consultarAsientos()">
+                        <option value="">Horario</option>
+                        <option th:each="horario : ${horarios}"
+                                th:value="${horario}"
+                                th:text="${horario}"></option>
+                    </select>
+                </div>
+
+                <div id="asientos-disponibles" class="asientos-resultado">
+                    <p>Selecciona película y horario</p>
+                </div>
+            </div>
+
+            <!-- RESERVAS RECIENTES -->
+            <div class="reservas-recientes">
+                <h3>Últimas Reservas</h3>
+                <div id="lista-reservas">
+                    <div th:each="reserva : ${reservasRecientes}" class="reserva-item">
+                        <span th:text="${reserva.usuario}"></span>
+                        <span th:text="${reserva.pelicula}"></span>
+                        <span th:text="${reserva.horario}"></span>
+                        <span th:text="${reserva.asientos}"></span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(reservasRecientes)}">
+                        <p>No hay reservas</p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="horario">Horario:</label>
-            <select id="horario" name="horario" required>
-                <option value="">Seleccione un horario</option>
-                <option th:each="horario : ${horarios}" th:value="${horario}" th:text="${horario}"></option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="asientos">Asientos (ej: A1,A2,B5):</label>
-            <input type="text" id="asientos" name="asientos" placeholder="A1,A2,B3" required>
-        </div>
-
-        <button type="submit">🎫 Reservar Asientos</button>
-    </form>
-
-    <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
-        <h3>📋 Instrucciones:</h3>
-        <p>1. Llena el formulario y haz clic en "Reservar"</p>
-        <p>2. Mira la consola del PROVEEDOR (verás el mensaje enviado)</p>
-        <p>3. Mira la consola del CONSUMIDOR (verás el mensaje recibido)</p>
+    <!-- INSTRUCCIONES -->
+    <div class="instructions">
+        <h3>Instrucciones:</h3>
+        <ol>
+            <li>Llena el formulario y haz clic en "Reservar"</li>
+            <li>El mensaje se envía a RabbitMQ</li>
+            <li>Tres servicios procesan la reserva en paralelo</li>
+            <li>Revisa la consola del Consumidor para ver los mensajes</li>
+        </ol>
     </div>
 </div>
+
+<!-- JAVASCRIPT -->
+<script>
+    // CONSULTAR ASIENTOS DISPONIBLES
+    function consultarAsientos() {
+        const pelicula = document.getElementById('consulta-pelicula').value;
+        const horario = document.getElementById('consulta-horario').value;
+
+        if (!pelicula || !horario) {
+            document.getElementById('asientos-disponibles').innerHTML =
+                '<p>Selecciona película y horario</p>';
+            return;
+        }
+
+        console.log("Consultando asientos para:", pelicula, horario);
+
+        fetch(`/consultar-asientos?pelicula=${encodeURIComponent(pelicula)}&horario=${encodeURIComponent(horario)}`)
+            .then(response => {
+                console.log("Respuesta recibida:", response);
+                if (!response.ok) {
+                    throw new Error('Error en la consulta');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Datos recibidos:", data);
+
+                let html = `<p><strong>Asientos disponibles: ${data.totalDisponibles}</strong></p>`;
+
+                if (data.totalDisponibles > 0) {
+                    html += `<div class="asientos-grid">`;
+                    data.disponibles.forEach(asiento => {
+                        html += `<span class="asiento-disponible" onclick="seleccionarAsiento('${asiento}')">${asiento}</span>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<p>No hay asientos disponibles</p>`;
+                }
+
+                if (data.ocupados && data.ocupados.length > 0) {
+                    html += `<p>Asientos ocupados: ${data.ocupados.join(', ')}</p>`;
+                }
+
+                document.getElementById('asientos-disponibles').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error en consulta:', error);
+                document.getElementById('asientos-disponibles').innerHTML =
+                    '<p>Error al consultar asientos. Revisa la consola.</p>';
+            });
+    }
+
+    // SELECCIONAR ASIENTO
+    function seleccionarAsiento(asiento) {
+        const inputAsientos = document.getElementById('asientos');
+        const asientosActuales = inputAsientos.value.split(',').filter(a => a.trim());
+
+        if (!asientosActuales.includes(asiento)) {
+            asientosActuales.push(asiento);
+            inputAsientos.value = asientosActuales.join(', ');
+        }
+    }
+
+    // ACTUALIZAR DISPONIBILIDAD AL CAMBIAR SELECT
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('pelicula').addEventListener('change', actualizarDisponibilidad);
+        document.getElementById('horario').addEventListener('change', actualizarDisponibilidad);
+    });
+
+    function actualizarDisponibilidad() {
+        const pelicula = document.getElementById('pelicula').value;
+        const horario = document.getElementById('horario').value;
+
+        if (pelicula && horario) {
+            consultarAsientosEspecificos(pelicula, horario);
+        } else {
+            document.getElementById('estado-asientos').innerText =
+                'Selecciona película y horario';
+        }
+    }
+
+    function consultarAsientosEspecificos(pelicula, horario) {
+        fetch(`/consultar-asientos?pelicula=${encodeURIComponent(pelicula)}&horario=${encodeURIComponent(horario)}`)
+            .then(response => response.json())
+            .then(data => {
+                let mensaje = `${data.totalDisponibles} asientos disponibles`;
+                if (data.totalDisponibles < 5) {
+                    mensaje = `Solo ${data.totalDisponibles} asientos disponibles`;
+                }
+                document.getElementById('estado-asientos').innerText = mensaje;
+            })
+            .catch(error => {
+                document.getElementById('estado-asientos').innerText =
+                    'Error al consultar';
+            });
+    }
+</script>
 </body>
 </html>
